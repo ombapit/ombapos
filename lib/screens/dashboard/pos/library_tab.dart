@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ombapos/utils/database_helper.dart';
+import 'package:ombapos/helpers/dao/category_dao.dart';
+import 'package:ombapos/models/category_model.dart';
+import 'package:ombapos/providers/category_provider.dart';
+import 'package:provider/provider.dart';
 
 class LibraryTab extends StatefulWidget {
   final ValueChanged<String>? onTitleChanged;
@@ -13,27 +16,19 @@ class LibraryTab extends StatefulWidget {
 }
 
 class LibraryTabState extends State<LibraryTab> {
-  final _dbHelper = DatabaseHelper();
-  List<Map<String, dynamic>> _kategoriList = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadKategori();
+    _loadCategories();
   }
 
-  Future<void> _loadKategori() async {
-    final kategori = await _dbHelper.getAllKategori();
-    setState(() {
-      _kategoriList = kategori;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _addKategori(String nama) async {
-    await _dbHelper.insertKategori(nama);
-    _loadKategori();
+  Future<void> _loadCategories() async {
+    await context.read<CategoryProvider>().fetchCategories();
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   bool isEditMode = false;
@@ -60,37 +55,9 @@ class LibraryTabState extends State<LibraryTab> {
     });
   }
 
-  void _showAddDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tambah Kategori'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Nama kategori'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('BATAL'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                _addKategori(controller.text.trim());
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('SIMPAN'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final categories = context.watch<CategoryProvider>().categories;
     final isProductView = selectedCategory != null;
     final productList = isProductView
         ? productsByCategory[selectedCategory] ?? []
@@ -161,7 +128,9 @@ class LibraryTabState extends State<LibraryTab> {
             child: SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  context.go('/pos/item');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(
                     context,
@@ -181,9 +150,8 @@ class LibraryTabState extends State<LibraryTab> {
             child: SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () async {
-                  final result = await context.push('/pos/category');
-                  if (result == true) _loadKategori();
+                onPressed: () {
+                  context.go('/pos/category');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(
@@ -222,16 +190,16 @@ class LibraryTabState extends State<LibraryTab> {
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: _kategoriList.length,
+                  itemCount: categories.length,
                   itemBuilder: (context, index) {
-                    final cat = _kategoriList[index];
-                    final prefix = cat.length >= 2
-                        ? cat['nama'].substring(0, 2).toUpperCase()
-                        : cat['nama'].toUpperCase();
+                    final cat = categories[index];
+                    final prefix = cat.name.length >= 2
+                        ? cat.name.substring(0, 2).toUpperCase()
+                        : cat.name.toUpperCase();
                     return GestureDetector(
                       onTap: () {
-                        setState(() => selectedCategory = cat['nama']);
-                        widget.onTitleChanged?.call(cat['nama']);
+                        setState(() => selectedCategory = cat.name);
+                        widget.onTitleChanged?.call(cat.name);
                         widget.onSubTitleChanged?.call(
                           (productsByCategory[selectedCategory] ?? []).length
                               .toString(),
@@ -270,7 +238,7 @@ class LibraryTabState extends State<LibraryTab> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                cat['nama'],
+                                cat.name,
                                 style: const TextStyle(fontSize: 16),
                               ),
                             ),

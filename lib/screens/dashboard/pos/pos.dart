@@ -3,14 +3,14 @@ import 'package:ombapos/screens/dashboard/pos/library_tab.dart';
 import 'package:ombapos/widgets/main_drawer.dart';
 import 'package:ombapos/widgets/simple_calc.dart';
 
-class MainDashboard extends StatefulWidget {
-  const MainDashboard({super.key});
+class PosPage extends StatefulWidget {
+  const PosPage({super.key});
 
   @override
-  State<MainDashboard> createState() => _MainDashboardState();
+  State<PosPage> createState() => _PosPageState();
 }
 
-class _MainDashboardState extends State<MainDashboard> {
+class _PosPageState extends State<PosPage> {
   final GlobalKey<LibraryTabState> _libraryKey = GlobalKey<LibraryTabState>();
 
   void callResetLibrary() {
