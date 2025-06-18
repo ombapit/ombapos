@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ombapos/screens/auth/login_screen.dart';
 import 'package:ombapos/screens/dashboard/activity.dart';
+import 'package:ombapos/screens/dashboard/pos/category/list.dart';
 import 'package:ombapos/screens/dashboard/settings.dart';
 import 'package:ombapos/screens/dashboard/shift.dart';
 import 'package:ombapos/screens/onboarding/onboarding_screen.dart';
@@ -73,6 +74,10 @@ class MainApp extends StatelessWidget {
           path: '/pos',
           builder: (context, state) => const MainDashboard(),
           routes: [
+            GoRoute(
+              path: 'category',
+              builder: (context, state) => const CategoryPage(),
+            ),
             GoRoute(
               path: 'activity',
               builder: (context, state) => const Activity(),

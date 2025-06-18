@@ -1,4 +1,4 @@
-package com.example.ombapos
+package com.ombapit.ombapos
 
 import io.flutter.embedding.android.FlutterActivity
 
