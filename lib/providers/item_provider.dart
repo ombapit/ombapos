@@ -5,12 +5,21 @@ import 'package:ombapos/models/item_model.dart';
 class ItemProvider with ChangeNotifier {
   final ItemDao _dao = ItemDao();
   List<Item> _items = [];
+  final Map<int, List<Variant>> _variantsCache = {};
 
   List<Item> get items => _items;
 
   Future<void> loadItems() async {
     _items = await _dao.getAllItems();
+    // Prefetch variants for all items
+    for (final item in _items) {
+      _variantsCache[item.id!] = await _dao.getVariantsByItemId(item.id!);
+    }
     notifyListeners();
+  }
+
+  List<Variant> getVariantsSync(int itemId) {
+    return _variantsCache[itemId] ?? [];
   }
 
   Future<void> addItemWithVariants(Item item, List<Variant> variants) async {
@@ -26,10 +35,6 @@ class ItemProvider with ChangeNotifier {
       );
     }
     await loadItems();
-  }
-
-  Future<List<Variant>> getVariants(int itemId) async {
-    return await _dao.getVariantsByItemId(itemId);
   }
 
   Future<void> deleteItem(int id) async {
